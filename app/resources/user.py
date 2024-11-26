@@ -1,4 +1,5 @@
 """Routes for User listing and control."""
+
 from typing import List, Optional, Union
 
 from fastapi import APIRouter, Depends, Request, status
@@ -99,9 +100,7 @@ async def unban_user(request: Request, user_id: int, db=Depends(get_database)):
     status_code=status.HTTP_200_OK,
     response_model=MyUserResponse,
 )
-async def edit_user(
-    user_id: int, user_data: UserEditRequest, db=Depends(get_database)
-):
+async def edit_user(user_id: int, user_data: UserEditRequest, db=Depends(get_database)):
     """Update the specified User's data.
 
     Available for the specific requesting User, or an Admin.
@@ -121,3 +120,11 @@ async def delete_user(user_id: int, db=Depends(get_database)):
     Admin only.
     """
     await UserManager.delete_user(user_id, db)
+
+
+@router.get("/test", status_code=status.HTTP_200_OK)
+async def say_hello():
+    """Return a greeting message."""
+    upal = "Upal"
+    print("🚀 ~ upal =", upal)
+    return {"message": "Hello FastAPI"}

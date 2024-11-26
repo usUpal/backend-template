@@ -45,9 +45,7 @@ class UserManager:
         """Register a new user."""
         # make sure relevant fields are not empty
         if not all(user_data.values()):
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, ErrorMessages.EMPTY_FIELDS
-            )
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, ErrorMessages.EMPTY_FIELDS)
 
         # create a new dictionary to return, otherwise the original is modified
         # and can cause random testing issues
@@ -55,6 +53,8 @@ class UserManager:
 
         new_user["password"] = pwd_context.hash(user_data["password"])
         new_user["banned"] = False
+
+        print("🚀")
 
         if background_tasks:
             new_user["verified"] = False
@@ -79,9 +79,7 @@ class UserManager:
                 ErrorMessages.EMAIL_INVALID,
             ) from err
 
-        user_do = await database.fetch_one(
-            User.select().where(User.c.id == id_)
-        )
+        user_do = await database.fetch_one(User.select().where(User.c.id == id_))
 
         if background_tasks:
             email = EmailManager()
@@ -95,12 +93,9 @@ class UserManager:
                         "user": new_user["email"],
                         "base_url": get_settings().base_url,
                         "name": (
-                            f"{new_user['first_name']} "
-                            f"{new_user['last_name']}"
+                            f"{new_user['first_name']} " f"{new_user['last_name']}"
                         ),
-                        "verification": AuthManager.encode_verify_token(
-                            user_do
-                        ),
+                        "verification": AuthManager.encode_verify_token(user_do),
                     },
                     template_name="welcome.html",
                 ),
@@ -117,21 +112,19 @@ class UserManager:
         user_do = await database.fetch_one(
             User.select().where(User.c.email == user_data["email"])
         )
+        print("🚀 ~ user_do =", user_do)
+
         if (
             not user_do
-            or not pwd_context.verify(
-                user_data["password"], user_do["password"]
-            )
+            or not pwd_context.verify(user_data["password"], user_do["password"])
             or user_do["banned"]
         ):
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, ErrorMessages.AUTH_INVALID
-            )
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, ErrorMessages.AUTH_INVALID)
 
-        if not user_do["verified"]:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, ErrorMessages.NOT_VERIFIED
-            )
+        # if not user_do["verified"]:
+        #     raise HTTPException(
+        #         status.HTTP_400_BAD_REQUEST, ErrorMessages.NOT_VERIFIED
+        #     )
 
         token = AuthManager.encode_token(user_do)
         refresh = AuthManager.encode_refresh_token(user_do)
@@ -141,25 +134,17 @@ class UserManager:
     @staticmethod
     async def delete_user(user_id: int, database):
         """Delete the User with specified ID."""
-        check_user = await database.fetch_one(
-            User.select().where(User.c.id == user_id)
-        )
+        check_user = await database.fetch_one(User.select().where(User.c.id == user_id))
         if not check_user:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, ErrorMessages.USER_INVALID
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ErrorMessages.USER_INVALID)
         await database.execute(User.delete().where(User.c.id == user_id))
 
     @staticmethod
     async def update_user(user_id: int, user_data: UserEditRequest, database):
         """Update the User with specified ID."""
-        check_user = await database.fetch_one(
-            User.select().where(User.c.id == user_id)
-        )
+        check_user = await database.fetch_one(User.select().where(User.c.id == user_id))
         if not check_user:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, ErrorMessages.USER_INVALID
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ErrorMessages.USER_INVALID)
         await database.execute(
             User.update()
             .where(User.c.id == user_id)
@@ -176,13 +161,9 @@ class UserManager:
         user_id: int, user_data: UserChangePasswordRequest, database
     ):
         """Change the specified user's Password."""
-        check_user = await database.fetch_one(
-            User.select().where(User.c.id == user_id)
-        )
+        check_user = await database.fetch_one(User.select().where(User.c.id == user_id))
         if not check_user:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, ErrorMessages.USER_INVALID
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ErrorMessages.USER_INVALID)
         await database.execute(
             User.update()
             .where(User.c.id == user_id)
@@ -196,13 +177,9 @@ class UserManager:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST, ErrorMessages.CANT_SELF_BAN
             )
-        check_user = await database.fetch_one(
-            User.select().where(User.c.id == user_id)
-        )
+        check_user = await database.fetch_one(User.select().where(User.c.id == user_id))
         if not check_user:
-            raise HTTPException(
-                status.HTTP_404_NOT_FOUND, ErrorMessages.USER_INVALID
-            )
+            raise HTTPException(status.HTTP_404_NOT_FOUND, ErrorMessages.USER_INVALID)
         if check_user["banned"] == state:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
@@ -228,13 +205,9 @@ class UserManager:
     @staticmethod
     async def get_user_by_email(email, database):
         """Return a specific user by their email address."""
-        return await database.fetch_one(
-            User.select().where(User.c.email == email)
-        )
+        return await database.fetch_one(User.select().where(User.c.email == email))
 
     @staticmethod
     async def get_user_by_id(user_id: int, database):
         """Return a specific user by their email address."""
-        return await database.fetch_one(
-            User.select().where(User.c.id == user_id)
-        )
+        return await database.fetch_one(User.select().where(User.c.id == user_id))

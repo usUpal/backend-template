@@ -75,7 +75,7 @@ mkdocs-minify-plugin = "^0.6.4"
 mkdocs-latest-git-tag-plugin = "^0.1.2"
 
 [build-system]
-requires = ["poetry-core"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
